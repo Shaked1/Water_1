@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>יומן עבודה - פיצוצי מים</title>
+    <link rel="stylesheet" href="form.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">
+            <h1>יומן עבודה - פיצוצי מים</h1>
+            <p>מערכת ממוחשבת לתיעוד עבודות שיקום ותחזוקה</p>
+        </div>
+
+        <form id="work-log-form" class="form-container" action="/send-report" method="POST">
+            
+            <div class="section">
+                <h2 class="section-title">פרטים כלליים</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="date">תאריך</label>
+                        <input type="date" id="date" name="date">
+                    </div>
+                    <div class="form-group">
+                        <label for="workType">סוג עבודה</label>
+                        <select id="workType" name="workType">
+                            <option value="שיקום">שיקום</option>
+                            <option value="מוקד">מוקד</option>
+                            <option value="החלפת תאים">החלפת תאים</option>
+                            <option value="תחזוקה">תחזוקה</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="address">כתובת</label>
+                        <input type="text" id="address" name="address" placeholder="הזן כתובת מלאה">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="operator">מבצע</label>
+                        <input type="text" id="operator" name="operator" placeholder="שם המבצע">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">מיקום עבודה</h2>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="sidewalk" name="workLocation_sidewalk">
+                        <label for="sidewalk">מדרכה</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="road" name="workLocation_road">
+                        <label for="road">כביש</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="garden" name="workLocation_garden">
+                        <label for="garden">גינה</label>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 0.8rem;">
+                    <label for="location_other">אחר</label>
+                    <input type="text" id="location_other" name="workLocation_other" placeholder="ציין מיקום אחר">
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">תיאור העבודה</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="pipeType">סוג צינור</label>
+                        <input type="text" id="pipeType" name="pipeType" placeholder="PE, PVC">
+                    </div>
+                    <div class="form-group">
+                        <label for="excavationLength">אורך (מ')</label>
+                        <input type="text" id="excavationLength" name="excavationLength">
+                    </div>
+                    <div class="form-group">
+                        <label for="excavationWidth">רוחב (מ')</label>
+                        <input type="text" id="excavationWidth" name="excavationWidth">
+                    </div>
+                    <div class="form-group">
+                        <label for="excavationDepth">עומק (מ')</label>
+                        <input type="text" id="excavationDepth" name="excavationDepth">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="parts">חלקים</label>
+                        <input type="text" id="parts" name="parts" placeholder="חלקים שהוחלפו">
+                    </div>
+                    <div class="form-group">
+                        <label for="wasteAmount">פסולת (מ"ק)</label>
+                        <input type="text" id="wasteAmount" name="wasteAmount">
+                    </div>
+                    <div class="form-group">
+                        <label for="temporaryClosureBedding">מצעים (מ"ק)</label>
+                        <input type="text" id="temporaryClosureBedding" name="temporaryClosureBedding">
+                    </div>
+                    <div class="form-group">
+                        <label for="temporaryClosureSand">חול (מ"ק)</label>
+                        <input type="text" id="temporaryClosureSand" name="temporaryClosureSand">
+                    </div>
+                    <div class="form-group">
+                        <label for="existingStones">אבנים (מ"ר)</label>
+                        <input type="text" id="existingStones" name="existingStones">
+                    </div>
+                    <div class="form-group">
+                        <label for="asphaltRepair">אספלט (מ"ר)</label>
+                        <input type="text" id="asphaltRepair" name="asphaltRepair">
+                    </div>
+                    <div class="form-group">
+                        <label for="curbstoneRemoval">אבן שפה (מ')</label>
+                        <input type="text" id="curbstoneRemoval" name="curbstoneRemoval">
+                    </div>
+                    <div class="form-group">
+                        <label for="valveInstallation">תא מגוף (כמות)</label>
+                        <input type="text" id="valveInstallation" name="valveInstallation">
+                    </div>
+                </div>
+                <div class="checkbox-item" style="margin-top: 1rem;">
+                    <input type="checkbox" id="roadClosure" name="roadClosure">
+                    <label for="roadClosure">סגירת כביש/מדרכה</label>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">ציוד ועובדים</h2>
+                <div class="equipment-grid">
+                    <div class="equipment-item">
+                        <label for="worker">פועל</label>
+                        <input type="number" id="worker" name="equipment_worker" min="0" value="0">
+                    </div>
+                    <div class="equipment-item">
+                        <label for="foreman">פ"מ</label>
+                        <input type="number" id="foreman" name="equipment_foreman" min="0" value="0">
+                    </div>
+                    <div class="equipment-item">
+                        <label for="excavator">מחפרון</label>
+                        <input type="number" id="excavator" name="equipment_excavator" min="0" value="0">
+                    </div>
+                    <div class="equipment-item">
+                        <label for="vehicle">טנדר</label>
+                        <input type="number" id="vehicle" name="equipment_vehicle" min="0" value="0">
+                    </div>
+                    <div class="equipment-item">
+                        <label for="truck">משאית</label>
+                        <input type="number" id="truck" name="equipment_truck" min="0" value="0">
+                    </div>
+                    <div class="equipment-item">
+                        <label for="compactor">מכבש</label>
+                        <input type="number" id="compactor" name="equipment_compactor" min="0" value="0">
+                    </div>
+                    <div class="equipment-item">
+                        <label for="pump">קונגו</label>
+                        <input type="number" id="pump" name="equipment_pump" min="0" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">הערות וסקיצה</h2>
+                <div class="form-group full-width">
+                    <label for="notes">הערות</label>
+                    <textarea id="notes" name="notes" placeholder="הערות נוספות..."></textarea>
+                </div>
+                <div class="form-group full-width">
+                    <label for="sketch">סקיצה</label>
+                    <textarea id="sketch" name="sketch" placeholder="תיאור הסקיצה"></textarea>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn-save">💾 שמור ושלח</button>
+                <button type="button" class="btn-print" onclick="window.print()">🖨️ הדפס</button>
+                <button type="reset" class="btn-clear">🗑️ נקה</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

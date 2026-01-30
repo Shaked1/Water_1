@@ -1,0 +1,49 @@
+body {
+    font-family: 'Assistant','Heebo',sans-serif;
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    padding: 1rem;
+}
+
+.app-container {
+    background: white;
+    border-radius: 20px;
+    max-width: 1000px;
+    margin: auto;
+}
+
+.header {
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.form-container {
+    padding: 1.5rem;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+button {
+    flex: 1;
+    padding: 1rem;
+    border-radius: 12px;
+    border: none;
+    font-weight: bold;
+}
+
+.btn-save { background:#10b981; color:white; }
+.btn-print { background:#2563eb; color:white; }
+.btn-clear { background:#6b7280; color:white; }
+
+/* ===== PRINT A4 ===== */
+@media print {
+    @page { size: A4 portrait; margin: 6mm; }
+    body { background: white; font-size: 7pt; zoom: 0.9; }
+    * { page-break-inside: avoid !important; }
+    .actions { display:none; }
+}

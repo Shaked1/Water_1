@@ -1,0 +1,28 @@
+{
+  "name": "water_1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shaked1/Water_1.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Shaked1/Water_1/issues"
+  },
+  "homepage": "https://github.com/Shaked1/Water_1#readme",
+  "dependencies": {
+    "body-parser": "^2.2.2",
+    "express": "^5.2.1",
+    "html-pdf-node": "^1.0.8",
+    "nodemailer": "^7.0.13"
+  }
+}
