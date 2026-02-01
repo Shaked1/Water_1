@@ -126,9 +126,8 @@ app.post('/send-report', async (req, res) => {
             args: [
                 '--no-sandbox', 
                 '--disable-setuid-sandbox', 
-                '--disable-dev-shm-usage', // זה קריטי למניעת קריסות בזיכרון נמוך
-                '--single-process',         // חוסך המון זיכרון RAM
-                '--no-zygote'
+                '--disable-dev-shm-usage',
+                '--disable-gpu'
             ] 
         };
         let file = { content: htmlContent };
