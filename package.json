@@ -23,6 +23,7 @@
     "body-parser": "^2.2.2",
     "express": "^5.2.1",
     "html-pdf-node": "^1.0.8",
-    "nodemailer": "^7.0.13"
+    "nodemailer": "^7.0.13",
+    "pdfkit": "^0.17.2"
   }
 }
