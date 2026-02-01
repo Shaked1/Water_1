@@ -49,17 +49,11 @@ app.post('/send-report', async (req, res) => {
 
 
                 <h3 style="background: #f3f4f6; padding: 5px;">מיקום עבודה:</h3>
-
                 <p>
-
                     ${formData.workLocation_sidewalk ? '✔️ מדרכה ' : ''}
-
                     ${formData.workLocation_road ? '✔️ כביש ' : ''}
-
                     ${formData.workLocation_garden ? '✔️ גינה ' : ''}
-
                     ${formData.workLocation_other ? '| אחר: ' + formData.workLocation_other : ''}
-
                 </p>
 
 
@@ -141,8 +135,8 @@ app.post('/send-report', async (req, res) => {
             let transporter = nodemailer.createTransport({
                 service: 'gmail',
                 auth: {
-                    user: 'shaked14782@gmail.com',
-                    pass: 'mouk npsl fybg gktc'
+                    user: 'hoshen.ya@gmail.com',
+                    pass: 'cnwj vgia uaqk lqqs'
                 },
 
                 tls: { rejectUnauthorized: false }
@@ -152,8 +146,8 @@ app.post('/send-report', async (req, res) => {
 
 
             let mailOptions = {
-                from: 'shaked14782@gmail.com',
-                to: 'shaked14782@gmail.com',
+                from: 'hoshen.ya@gmail.com',
+                to: 'hoshen.ya@gmail.com',
                 subject: 'יומן עבודה מעודכן - פיצוצי מים',
                 text: `מצורף דוח עבודה עבור כתובת: ${formData.address}`,
                 attachments: [{ filename: `report_${formData.date}.pdf`, content: pdfBuffer }]
