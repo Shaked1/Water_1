@@ -121,9 +121,15 @@ app.post('/send-report', async (req, res) => {
 
         // הגדרות ה-PDF - פשוט וקליל
         let options = { 
-        format: 'A4', 
-        printBackground: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+            format: 'A4', 
+            printBackground: true,
+            args: [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox', 
+                '--disable-dev-shm-usage', // זה קריטי למניעת קריסות בזיכרון נמוך
+                '--single-process',         // חוסך המון זיכרון RAM
+                '--no-zygote'
+            ] 
         };
         let file = { content: htmlContent };
 
