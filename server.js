@@ -13,14 +13,27 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 const PORT = process.env.PORT || 8080;
 
-// הגדרות Google Drive
-const KEYFILEPATH = path.join(__dirname, 'google-credentials.json');
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 
-const auth = new google.auth.GoogleAuth({
-    keyFile: KEYFILEPATH,
-    scopes: SCOPES,
-});
+// הגדרת אימות (Auth) - תומך גם במחשב מקומי וגם ב-Railway
+let auth;
+try {
+    if (process.env.GOOGLE_CREDENTIALS_JSON) {
+        console.log("Using credentials from Environment Variables (Railway)");
+        auth = new google.auth.GoogleAuth({
+            credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON),
+            scopes: SCOPES,
+        });
+    } else {
+        console.log("Using credentials from local JSON file");
+        auth = new google.auth.GoogleAuth({
+            keyFile: path.join(__dirname, 'google-credentials.json'),
+            scopes: SCOPES,
+        });
+    }
+} catch (err) {
+    console.error("Critical Error: Could not initialize Google Auth", err);
+}
 
 /**
  * פונקציה להעלאת קובץ ל-Shared Drive
@@ -28,7 +41,7 @@ const auth = new google.auth.GoogleAuth({
 async function uploadToDrive(pdfBuffer, fileName) {
     const driveService = google.drive({ version: 'v3', auth });
     
-    // ה-ID של התיקייה השיתופית שסיפקת
+    // ה-ID של התיקייה השיתופית שלך
     const folderId = '1gBXpsw8v9DdnoozWVhQ0bxSzoNEkcfRh'; 
 
     const fileMetadata = {
@@ -46,12 +59,11 @@ async function uploadToDrive(pdfBuffer, fileName) {
             requestBody: fileMetadata,
             media: media,
             fields: 'id',
-            // הגדרות קריטיות לעבודה עם Shared Drive ופתרון בעיית ה-Quota
             supportsAllDrives: true,
             keepRevisionForever: true
         });
 
-        console.log('File created with ID:', response.data.id);
+        console.log('File successfully uploaded. ID:', response.data.id);
         return response.data.id;
     } catch (error) {
         console.error('Drive Upload Error:', error);
@@ -65,7 +77,7 @@ app.get('/', (req, res) => {
 
 app.post('/send-report', upload.array('images', 5), async (req, res) => {
     try {
-        console.log('Received request, compiling template...');
+        console.log('Received request, compiling report...');
         const formData = req.body;
 
         // 1. חישובים אוטומטיים
@@ -136,7 +148,6 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;">סוג צינור: ${formData.pipeType || ''}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">מידות חפירה: ${L}x${W}x${D}</td>
-                        
                     </tr>
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;">חלקים שהוחלפו: ${formData.parts || 'אין'}</td>
@@ -169,11 +180,16 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
             </div>
         `;
 
-        // 5. יצירת ה-PDF ושמירה לדרייב
+        // 5. יצירת ה-PDF עם אופטימיזציה לשרת ענן
         let options = { 
             format: 'A4', 
             printBackground: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+            args: [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage', // חשוב מאוד לשרתים עם מעט זיכרון
+                '--disable-gpu'
+            ] 
         };
         
         let file = { content: htmlContent };
@@ -181,17 +197,17 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
         const pdfBuffer = await html_to_pdf.generatePdf(file, options);
         
         // יצירת שם קובץ תקני (ללא רווחים)
-        const fileName = `דו"ח_${formData.address || 'ללא_כתובת'}_${formData.date || 'ללא_תאריך'}.pdf`.replace(/\s+/g, '_');
+        const fileName = `דו"ח_${(formData.address || 'ללא_כתובת').replace(/\s+/g, '_')}_${formData.date || 'ללא_תאריך'}.pdf`;
         
-        console.log(`Uploading ${fileName} to Drive...`);
-        const fileId = await uploadToDrive(pdfBuffer, fileName);
+        console.log(`Starting upload for: ${fileName}`);
+        await uploadToDrive(pdfBuffer, fileName);
 
         res.send(`<h1>הדוח נשמר בהצלחה בתיקייה השיתופית!</h1><p>שם הקובץ: ${fileName}</p><a href="/">חזרה לטופס</a>`);
 
     } catch (error) {
-        console.error('Error details:', error);
-        res.status(500).send('שגיאה בתהליך יצירת הדוח או שמירתו בדרייב. בדקי את ה-Console של השרת.');
+        console.error('Error during processing:', error);
+        res.status(500).send('שגיאה בתהליך יצירת הדוח. בדקי את ה-Logs ב-Railway.');
     }
 });
 
-app.listen(PORT, () => console.log(`Server is running: http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Server is running on port: ${PORT}`));
