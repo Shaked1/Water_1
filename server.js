@@ -15,24 +15,30 @@ const PORT = process.env.PORT || 8080;
 
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 
-// הגדרת אימות (Auth) - תומך גם במחשב מקומי וגם ב-Railway
+// הגדרת אימות (Auth) - גרסה מתוקנת
 let auth;
-try {
-    if (process.env.GOOGLE_CREDENTIALS_JSON) {
-        console.log("Using credentials from Environment Variables (Railway)");
+const credentialsVar = process.env.GOOGLE_CREDENTIALS_JSON;
+
+if (credentialsVar) {
+    console.log("Railway environment detected. Initializing with GOOGLE_CREDENTIALS_JSON variable.");
+    try {
+        // ניקוי תווים בלתי נראים שעלולים להיכנס בהעתקה
+        const cleanJson = credentialsVar.trim();
         auth = new google.auth.GoogleAuth({
-            credentials: JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON),
+            credentials: JSON.parse(cleanJson),
             scopes: SCOPES,
         });
-    } else {
-        console.log("Using credentials from local JSON file");
-        auth = new google.auth.GoogleAuth({
-            keyFile: path.join(__dirname, 'google-credentials.json'),
-            scopes: SCOPES,
-        });
+    } catch (parseError) {
+        console.error("FAILED to parse GOOGLE_CREDENTIALS_JSON. Make sure it is a valid JSON string.");
+        throw parseError;
     }
-} catch (err) {
-    console.error("Critical Error: Could not initialize Google Auth", err);
+} else {
+    console.log("Local environment detected. Searching for google-credentials.json file.");
+    const localKeyPath = path.join(__dirname, 'google-credentials.json');
+    auth = new google.auth.GoogleAuth({
+        keyFile: localKeyPath,
+        scopes: SCOPES,
+    });
 }
 
 /**
