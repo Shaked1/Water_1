@@ -7,9 +7,13 @@ const { google } = require('googleapis');
 const { Readable } = require('stream');
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 } // עד 10MB לתמונה
+});
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.static(__dirname));
 const PORT = process.env.PORT || 8080;
 
@@ -46,19 +50,9 @@ if (credentialsVar) {
  */
 async function uploadToDrive(pdfBuffer, fileName) {
     const driveService = google.drive({ version: 'v3', auth });
-    
-    // ה-ID של התיקייה השיתופית שלך
     const folderId = '1gBXpsw8v9DdnoozWVhQ0bxSzoNEkcfRh'; 
-
-    const fileMetadata = {
-        name: fileName,
-        parents: [folderId],
-    };
-
-    const media = {
-        mimeType: 'application/pdf',
-        body: Readable.from(pdfBuffer),
-    };
+    const fileMetadata = { name: fileName, parents: [folderId] };
+    const media = { mimeType: 'application/pdf', body: Readable.from(pdfBuffer) };
 
     try {
         const response = await driveService.files.create({
@@ -66,9 +60,8 @@ async function uploadToDrive(pdfBuffer, fileName) {
             media: media,
             fields: 'id',
             supportsAllDrives: true,
-            keepRevisionForever: true
+            keepRevisionForever: true,
         });
-
         console.log('File successfully uploaded. ID:', response.data.id);
         return response.data.id;
     } catch (error) {
@@ -90,11 +83,24 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
         const L = parseFloat(formData.excavationLength) || 0;
         const W = parseFloat(formData.excavationWidth) || 0;
         const D = parseFloat(formData.excavationDepth) || 0;
+        const restoreType = formData.restoreType; // asphalt, stones, or both
 
         const calculatedWaste = (L * W * D).toFixed(2);
-        const calculatedAsphalt = (L * W * 0.11).toFixed(2);
         const calculatedBedding = (L * W * D * 0.4).toFixed(2);
         const calculatedSand = (L * W * D * 0.6).toFixed(2);
+
+        // חישוב מותנה לפי בחירת המשתמש
+        let calculatedAsphalt = "0.00";
+        let calculatedStones = "0.00";
+
+        if (restoreType === 'asphalt' || restoreType === 'both') {
+            calculatedAsphalt = (L * W * 0.11).toFixed(2);
+        }
+        
+        if (restoreType === 'stones' || restoreType === 'both') {
+            // אם הוזן ערך ידנית בתיבת "אבנים", נשתמש בו, אחרת נחשב לפי שטח
+            calculatedStones = formData.existingStones ? parseFloat(formData.existingStones).toFixed(2) : (L * W).toFixed(2);
+        }
 
         // 2. סינון ציוד ועובדים
         const equipmentLabels = {
@@ -104,7 +110,7 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
             equipment_vehicle: 'טנדר',
             equipment_truck: 'משאית',
             equipment_compactor: 'מכבש',
-            equipment_pump: 'קונקו',
+            equipment_pump: 'קונגו',
             equipment_cart: 'עגלת חץ',
             equipment_barriers: 'מחסומים'
         };
@@ -117,11 +123,12 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
         // 3. עיבוד תמונות ל-Base64
         let imagesHtml = '';
         if (req.files && req.files.length > 0) {
-            imagesHtml = '<h3 style="background: #f3f4f6; padding: 5px;">תמונות מהשטח:</h3><div style="display: flex; flex-wrap: wrap; gap: 10px;">';
-            req.files.forEach(file => {
-                const base64Image = file.buffer.toString('base64');
-                imagesHtml += `<img src="data:${file.mimetype};base64,${base64Image}" style="width: 300px; border: 1px solid #ddd; border-radius: 5px;">`;
-            });
+                    imagesHtml = '<h3 style="background:#f3f4f6; padding:5px;">תמונות מהשטח:</h3><div style="display:flex; flex-wrap:wrap; gap:10px;">';
+                    for (const file of req.files) {
+                        const base64Image = file.buffer.toString('base64');
+                        // הוספנו loading="eager" ו-decoding="sync" כדי להכריח את ה-PDF להמתין לתמונה
+                        imagesHtml += `<img src="data:${file.mimetype};base64,${base64Image}" style="width:45%; border:1px solid #ddd; border-radius:5px;" loading="eager" decoding="sync">`;
+                    }
             imagesHtml += '</div>';
         }
 
@@ -165,7 +172,7 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
                     </tr>
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;">אספלט: ${calculatedAsphalt} מ"ר</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">אבנים: ${formData.existingStones || 0} מ"ר</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">אבנים: ${calculatedStones} מ"ר</td>
                     </tr>
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;">אבן שפה: ${formData.curbstoneRemoval || 0} מ'</td>
@@ -173,7 +180,7 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
                     </tr>
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;">קוטר צינור: ${formData.pipeDiameter || 'אין'}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">${formData.roadClosure ? '✔️ סגירת כביש/מדרכה' : ''}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${formData.roadClosure ? '✔️ סגירת כביש/מדרכה/סטרילי' : ''}</td>
                     </tr>
                 </table>
 
@@ -190,16 +197,15 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
         let options = { 
             format: 'A4', 
             printBackground: true,
-            args: [
-                '--no-sandbox', 
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage', // חשוב מאוד לשרתים עם מעט זיכרון
-                '--disable-gpu'
-            ] 
+            margin: { top: '1cm', right: '1cm', bottom: '1cm', left: '1cm' },
+            // הוספת הפקודה הזו אומרת ל-Puppeteer לחכות שהתמונות יטענו בזיכרון
+            waitUntil: 'networkidle0', 
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] 
         };
         
         let file = { content: htmlContent };
 
+        // הוספת timeout למקרה שהתמונות כבדות מאוד
         const pdfBuffer = await html_to_pdf.generatePdf(file, options);
         
         // יצירת שם קובץ תקני (ללא רווחים)
@@ -216,4 +222,4 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`Server is running on port: ${PORT}`));
+app.listen(PORT, () => console.log(`Server is running on port: ${PORT}, http://localhost:${PORT}`));
