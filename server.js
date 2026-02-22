@@ -180,7 +180,14 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
                     </tr>
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;">קוטר צינור: ${formData.pipeDiameter || 'אין'}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">${formData.roadClosure ? '✔️ סגירת כביש/מדרכה/סטרילי' : ''}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">                
+                            <p>
+                                ${formData.closeLocation_sidewalk ? '✔️ מדרכה ' : ''}
+                                ${formData.closeLocation_road ? '✔️ כביש ' : ''}
+                                ${formData.closeLocation_sterile ? '✔️ סטרילי ' : ''}
+                                ${formData.closeLocation_other ? '| אחר: ' + formData.closeLocation_other : ''}
+                            </p>
+                        </td>
                     </tr>
                 </table>
 
