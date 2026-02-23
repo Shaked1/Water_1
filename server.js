@@ -17,7 +17,10 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.static(__dirname));
 const PORT = process.env.PORT || 8080;
 
-const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
+const SCOPES = [
+    'https://www.googleapis.com/auth/drive.file',
+    'https://www.googleapis.com/auth/calendar.events'
+];
 
 // הגדרת אימות (Auth) - גרסה מתוקנת
 let auth;
@@ -67,6 +70,38 @@ async function uploadToDrive(pdfBuffer, fileName) {
     } catch (error) {
         console.error('Drive Upload Error:', error);
         throw error;
+    }
+}
+
+/**
+ * פונקציה להוספת אירוע לשני היומנים
+ */
+async function addToCalendar(formData) {
+    const calendar = google.calendar({ version: 'v3', auth });
+    const eventDate = formData.date || new Date().toISOString().split('T')[0];
+
+    const event = {
+        summary: `תיקון פיצוץ: ${formData.address || 'כתובת לא ידועה'}`,
+        location: formData.address,
+        description: `מבצע: ${formData.operator}\nסוג עבודה: ${formData.workType}\nהערות: ${formData.notes}`,
+        start: { date: eventDate },
+        end: { date: eventDate },
+    };
+
+    // רשימת היומנים שאליהם אנחנו רוצים להכניס את האירוע ישירות
+    const calendars = ['hoshen.ya@gmail.com', 'hoshen.na@gmail.com'];
+
+    for (const calId of calendars) {
+        try {
+            await calendar.events.insert({
+                calendarId: calId,
+                resource: event
+            });
+            console.log(`Event created directly in calendar: ${calId}`);
+        } catch (error) {
+            console.error(`Error inserting to ${calId}:`, error.message);
+            // אם כאן יש שגיאת 404, ודאי שוב ששיתפת את היומן הספציפי הזה עם ה-Service Account
+        }
     }
 }
 
@@ -220,6 +255,10 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
         
         console.log(`Starting upload for: ${fileName}`);
         await uploadToDrive(pdfBuffer, fileName);
+
+        // שליחה ליומנים
+        console.log('Adding event to Google Calendars...');
+        await addToCalendar(formData);
 
         res.send(`<h1>הדוח נשמר בהצלחה בתיקייה השיתופית!</h1><p>שם הקובץ: ${fileName}</p><a href="/">חזרה לטופס</a>`);
 
