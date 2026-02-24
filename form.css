@@ -12,11 +12,27 @@ body {
 }
 
 .header {
-    background: linear-gradient(135deg,#667eea,#764ba2);
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
     padding: 2rem;
-    text-align: center;
+    /* הגדרות חדשות ליישור האייקון */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    text-align: right; /* יישור הטקסט לימין לצד הלוגו */
 }
+
+/* הוספת עיצוב לאייקון עצמו */
+.app-logo {
+    width: 80px;         /* גודל האייקון */
+    height: 80px;
+    border-radius: 18px; /* פינות מעוגלות */
+    object-fit: cover;   /* שומר על פרופורציות התמונה */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* צל שיוציא אותו מהרקע */
+    border: 2px solid rgba(255, 255, 255, 0.3); /* מסגרת עדינה */
+}
+
 
 .form-container {
     padding: 1.5rem;
@@ -41,9 +57,15 @@ button {
 .btn-clear { background:#6b7280; color:white; }
 
 /* ===== PRINT A4 ===== */
-@media print {
-    @page { size: A4 portrait; margin: 6mm; }
-    body { background: white; font-size: 7pt; zoom: 0.9; }
-    * { page-break-inside: avoid !important; }
-    .actions { display:none; }
+@media (max-width: 600px) {
+    .header {
+        flex-direction: column; /* הלוגו יהיה מעל הטקסט בנייד */
+        text-align: center;
+        padding: 1.5rem;
+    }
+    
+    .app-logo {
+        width: 60px; /* קצת יותר קטן בנייד */
+        height: 60px;
+    }
 }
