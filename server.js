@@ -155,6 +155,18 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
             .map(key => `<li>${equipmentLabels[key]}: ${formData[key]}</li>`)
             .join('');
 
+        
+        const sketchImage = req.body.sketchData;
+        let sketchHtml = "";
+        if (sketchImage && sketchImage.length > 100) { // בודק אם באמת צוייר משהו
+            sketchHtml = `
+                <h3 style="background: #f3f4f6; padding: 5px;">סקיצה מהשטח:</h3>
+                <div style="text-align: center;">
+                    <img src="${sketchImage}" style="width: 100%; max-width: 500px; border: 1px solid #ddd; border-radius: 10px;">
+                </div>
+            `;
+        }
+
         // 3. עיבוד תמונות ל-Base64
         let imagesHtml = '';
         if (req.files && req.files.length > 0) {
@@ -231,9 +243,13 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
 
                 <p><strong>הערות:</strong> ${formData.notes || 'אין'}</p>
 
-                ${imagesHtml}
+                
+
+                ${sketchHtml}   ${imagesHtml}
             </div>
         `;
+
+
 
         // 5. יצירת ה-PDF עם אופטימיזציה לשרת ענן
         let options = { 
