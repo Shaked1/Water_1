@@ -51,11 +51,24 @@ if (credentialsVar) {
 /**
  * פונקציה להעלאת קובץ ל-Shared Drive
  */
-async function uploadToDrive(pdfBuffer, fileName) {
+/**
+ * פונקציה להעלאת תוכן HTML והמרתו ל-Google Doc
+ */
+async function uploadToDocs(htmlContent, fileName) {
     const driveService = google.drive({ version: 'v3', auth });
     const folderId = '1gBXpsw8v9DdnoozWVhQ0bxSzoNEkcfRh'; 
-    const fileMetadata = { name: fileName, parents: [folderId] };
-    const media = { mimeType: 'application/pdf', body: Readable.from(pdfBuffer) };
+    
+    const fileMetadata = { 
+        name: fileName, 
+        parents: [folderId],
+        mimeType: 'application/vnd.google-apps.document' // הגדרה שהקובץ יהיה Google Doc
+    };
+
+    // המרת ה-HTML לסטרים שה-API יודע לקרוא
+    const media = { 
+        mimeType: 'text/html', 
+        body: Readable.from([htmlContent]) 
+    };
 
     try {
         const response = await driveService.files.create({
@@ -63,12 +76,11 @@ async function uploadToDrive(pdfBuffer, fileName) {
             media: media,
             fields: 'id',
             supportsAllDrives: true,
-            keepRevisionForever: true,
         });
-        console.log('File successfully uploaded. ID:', response.data.id);
+        console.log('Doc successfully created. ID:', response.data.id);
         return response.data.id;
     } catch (error) {
-        console.error('Drive Upload Error:', error);
+        console.error('Docs Upload Error:', error);
         throw error;
     }
 }
@@ -267,10 +279,11 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
         const pdfBuffer = await html_to_pdf.generatePdf(file, options);
         
         // יצירת שם קובץ תקני (ללא רווחים)
-        const fileName = `דו"ח_${(formData.address || 'ללא_כתובת').replace(/\s+/g, '_')}_${formData.date || 'ללא_תאריך'}.pdf`;
-        
-        console.log(`Starting upload for: ${fileName}`);
-        await uploadToDrive(pdfBuffer, fileName);
+        const fileName = `דו"ח_${(formData.address || 'ללא_כתובת').replace(/\s+/g, '_')}_${formData.date || 'ללא_תאריך'}`;
+
+        console.log(`Starting upload to Google Docs: ${fileName}`);
+        // שליחת ה-htmlContent שיצרת קודם לכן
+        await uploadToDocs(htmlContent, fileName);
 
         // שליחה ליומנים
         console.log('Adding event to Google Calendars...');
