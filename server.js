@@ -93,7 +93,7 @@ async function addToCalendar(formData) {
     const eventDate = formData.date || new Date().toISOString().split('T')[0];
 
     const event = {
-        summary: `תיקון פיצוץ: ${formData.address || 'כתובת לא ידועה'}`,
+        summary: `${formData.workType} ${formData.address || 'כתובת לא ידועה'}`,
         location: formData.address,
         description: `מבצע: ${formData.operator}\nסוג עבודה: ${formData.workType}\nהערות: ${formData.notes}`,
         start: { date: eventDate },
@@ -281,13 +281,11 @@ app.post('/send-report', upload.array('images', 5), async (req, res) => {
         // יצירת שם קובץ תקני (ללא רווחים)
         const fileName = `דו"ח_${(formData.address || 'ללא_כתובת').replace(/\s+/g, '_')}_${formData.date || 'ללא_תאריך'}`;
 
-        console.log(`Starting upload to Google Docs: ${fileName}`);
-        // שליחת ה-htmlContent שיצרת קודם לכן
-        await uploadToDocs(htmlContent, fileName);
-
-        // שליחה ליומנים
-        console.log('Adding event to Google Calendars...');
-        await addToCalendar(formData);
+        // מריץ את שתי הפעולות יחד ומחכה ששתיהן יסתיימו
+        await Promise.all([
+            uploadToDocs(htmlContent, fileName),
+            addToCalendar(formData)
+        ]);
 
         res.send(`<h1>הדוח נשמר בהצלחה בתיקייה השיתופית!</h1><p>שם הקובץ: ${fileName}</p><a href="/">חזרה לטופס</a>`);
 
